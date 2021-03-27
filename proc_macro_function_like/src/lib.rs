@@ -79,7 +79,7 @@ pub fn pg_query(input: TokenStream) -> TokenStream {
         use crate::helper_traits::ChainedArguments as _;
 
         sqlx::query_as_with::<_, #model, _>(
-            concatcp! (#select_from_clause #literal_and_clause),
+            concatcp!(#select_from_clause #literal_and_clause),
             sqlx::postgres::PgArguments::default() #add_c,
         )
             .fetch_optional(#executor).await
