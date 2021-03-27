@@ -52,10 +52,6 @@ impl Parse for SimplePgQuery {
 pub fn pg_query(input: TokenStream) -> TokenStream {
     let SimplePgQuery { model, executor, params} = parse_macro_input!(input);
 
-    let select_from_clause = quote::quote!(
-        "SELECT * FROM ", #model :: TABLE_NAME,
-    );
-
     let mut add_c = pm2::TokenStream::new();
     let mut and_clause = pm2::TokenStream::new();
 
@@ -79,7 +75,7 @@ pub fn pg_query(input: TokenStream) -> TokenStream {
         use crate::helper_traits::ChainedArguments as _;
 
         sqlx::query_as_with::<_, #model, _>(
-            concatcp!(#select_from_clause #literal_and_clause),
+            concatcp!("SELECT * FROM ", #model::TABLE_NAME, #literal_and_clause),
             sqlx::postgres::PgArguments::default() #add_c,
         )
             .fetch_optional(#executor).await
