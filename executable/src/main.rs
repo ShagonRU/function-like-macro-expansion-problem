@@ -8,7 +8,7 @@ fn main() {
     println!("Hello, world!");
 }
 
-#[tokio::test]
+// #[tokio::test]
 async fn test() {
     use serde::{Deserialize, Serialize};
     use sqlx::FromRow;
