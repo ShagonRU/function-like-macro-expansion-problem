@@ -8,9 +8,9 @@ edition = "2018"
 serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
 
-tokio = { version = "^1.0" }
+tokio = { version = "^1.0", features = ["macros"]}
 
-sqlx = { version = "0.5.1", default-features = false, features = ["postgres", "json"] }
+sqlx = { version = "0.5.1", default-features = false, features = ["runtime-actix-rustls", "postgres", "json", "macros"] }
 
 # concatcp
 const_format = "0.2.8"
