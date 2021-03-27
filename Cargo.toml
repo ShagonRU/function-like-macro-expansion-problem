@@ -1,0 +1,2 @@
+[workspace]
+members = ["executable", "proc_macro_function_like"]

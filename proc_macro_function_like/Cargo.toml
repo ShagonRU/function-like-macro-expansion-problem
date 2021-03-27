@@ -1,0 +1,21 @@
+[package]
+name = "proc_macro_function_like"
+version = "0.1.0"
+authors = ["Shagon <goshan58rus@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "proc_macro_function_like"
+proc-macro = true
+
+# ===== Dependencies =====
+
+[dependencies.proc-macro2]
+version = "^1.0"
+
+[dependencies.quote]
+version = "^1.0"
+
+[dependencies.syn]
+version = "^1.0"
+features = ["visit"]
