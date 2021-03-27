@@ -74,8 +74,9 @@ pub fn pg_query(input: TokenStream) -> TokenStream {
     let expanded = quote::quote!({
         use crate::helper_traits::ChainedArguments as _;
 
+        const __SELECT_CLAUSE: &str = concatcp!("SELECT * FROM ", #model::TABLE_NAME, #literal_and_clause);
         sqlx::query_as_with::<_, #model, _>(
-            concatcp!("SELECT * FROM ", #model::TABLE_NAME, #literal_and_clause),
+            __SELECT_CLAUSE,
             sqlx::postgres::PgArguments::default() #add_c,
         )
             .fetch_optional(#executor).await
