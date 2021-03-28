@@ -48,6 +48,13 @@ impl Parse for SimplePgQuery {
     }
 }
 
+macro_rules! format_literal {
+    ($($arg:tt)*) => {{
+        let value = format!($($arg)*);
+        ::quote::quote!(#value)
+    }}
+}
+
 #[proc_macro]
 pub fn pg_query(input: TokenStream) -> TokenStream {
     let SimplePgQuery { model, executor, params} = parse_macro_input!(input);
@@ -56,31 +63,36 @@ pub fn pg_query(input: TokenStream) -> TokenStream {
     let mut and_clause = pm2::TokenStream::new();
 
     let arguments_count = params.len();
-
     for (field_alias, field_variable, arg_number_at_query) in params {
 
-        let num_lit = pm2::Literal::usize_unsuffixed(arg_number_at_query);
+        let dollar_with_num_str = format_literal!("${}", arg_number_at_query);
 
-        and_clause = quote::quote!(#and_clause #field_alias = $#num_lit);
+        and_clause = quote::quote!(#and_clause #field_alias = #dollar_with_num_str);
         if arg_number_at_query != arguments_count {
-            and_clause = quote::quote!(#and_clause  AND);
+            and_clause = quote::quote!(#and_clause AND);
         }
 
         add_c = quote::quote!(#add_c .add_c(#field_variable));
     }
 
-    let literal_and_clause = pm2::Literal::string(&and_clause.to_string());
+    let vectorized = and_clause.to_string()
+        .split('"')
+        .map(|x| pm2::Literal::string(x))
+        .collect::<Vec<_>>();
 
     let expanded = quote::quote!({
         use crate::helper_traits::ChainedArguments as _;
 
-        const __SELECT_CLAUSE: &str = concatcp!("SELECT * FROM ", #model::TABLE_NAME, #literal_and_clause);
+        const __SELECT_CLAUSE: &str = concatcp!("SELECT * FROM ", #model::TABLE_NAME, " WHERE ",  #( #vectorized, )*);
+        eprintln!("{:?}", __SELECT_CLAUSE);
         sqlx::query_as_with::<_, #model, _>(
             __SELECT_CLAUSE,
             sqlx::postgres::PgArguments::default() #add_c,
         )
             .fetch_optional(#executor).await
     });
+
+    eprintln!("{}", &expanded);
 
     TokenStream::from(expanded)
 }
