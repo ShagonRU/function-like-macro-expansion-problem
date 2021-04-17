@@ -2,14 +2,36 @@ mod helper_traits;
 
 #[tokio::main]
 async fn main() {
-    let dsn_3 = "postgresql://";
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(25)
-        .min_connections(5)
-        .connect_timeout(tokio::time::Duration::from_secs(10))
-        .connect(dsn_3)
-        .await
-        .unwrap();
 
-    let mut _executor_3 = pool.acquire().await.unwrap();
+    mod case_1 {
+        type Conn = sqlx::pool::PoolConnection<sqlx::Postgres>;
+
+        fn by_mut_ref(executor: &mut Conn) -> i32 {
+            let res1 = sqlx::query_as::<_, i32>("SELECT 1").fetch_one(executor).await.unwrap();
+            let res2 = sqlx::query_as::<_, i32>("SELECT 1").fetch_one(executor).await.unwrap();
+            res1 + res2
+        }
+
+        fn mut_move(mut executor: Conn) -> i32 {
+            let res1 = sqlx::query_as::<_, i32>("SELECT 1").fetch_one(&mut executor).await.unwrap();
+            let res2 = sqlx::query_as::<_, i32>("SELECT 1").fetch_one(&mut executor).await.unwrap();
+            res1 + res2
+        }
+
+        fn some_func_mut(mut executor: Conn) -> i32 {
+            let res3 = mut_move(executor);
+            let res1 = by_mut_ref(&mut executor);
+            let res2 = by_mut_ref(&mut executor);
+            let res4 = mut_move(executor);
+            res1 + res2 + res3 + res4
+        }
+
+        fn some_func_mut_ref(mut executor: &mut Conn) -> i32 {
+            let res3 = mut_move(executor);
+            let res1 = by_mut_ref(executor);
+            let res2 = by_mut_ref(executor);
+            let res4 = mut_move(executor);
+            res1 + res2 + res3 + res4
+        }
+    }
 }
