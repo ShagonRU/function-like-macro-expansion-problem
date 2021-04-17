@@ -2,7 +2,8 @@ mod helper_traits;
 
 #[tokio::main]
 async fn main() {
-    let dsn_3 = "postgresql://";
+    let dsn_3 =  "postgres://sqlx_user:sqlx_pass@localhost:5656/sqlx_work_please";
+    // let dsn_3 = "postgres://";
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(25)
         .min_connections(5)

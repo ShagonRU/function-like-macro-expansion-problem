@@ -10,10 +10,16 @@ serde_json = "^1.0"
 
 tokio = { version = "^1.0", features = ["macros"]}
 
-sqlx = { version = "0.5.1", default-features = false, features = ["runtime-actix-rustls", "postgres", "json", "macros"] }
+
 
 # concatcp
 const_format = "0.2.8"
 
 [dependencies.proc_macro_function_like]
 path = "../proc_macro_function_like"
+
+[dependencies.sqlx]
+version = "0.5.1"
+default-features = false
+features = ["runtime-actix-rustls", "postgres", "json", "macros", "pg_legacy_encoding_errors"]
+path = "../../sqlx"
