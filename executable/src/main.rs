@@ -38,52 +38,9 @@ async fn test() {
     let email_var = "example@example.com".to_string();
 
     let s = pg_query!(User, &mut executor, login = login_var, hourly_rate = Some(10));
-    let s2 = pg_query!(User, &mut executor, login = login_var, hourly_rate = 10.0);
-    let s3 = pg_query!(User, &mut executor, login = login_var, hourly_rate = Some(10.0));
-    // dbg!(s);
-
-
-    let f = sqlx::query_as!(
-        User,
-        r#"SELECT id, avatar_url, login, email, firstname, lastname, description, hourly_rate,
-        currency, created_at, state as "state: _", role as "role: _" FROM users WHERE login = $1 AND hourly_rate = $2"#,
-        "rest",
-        Some(10.0_f64)
-    )
-        .fetch_optional(&mut executor)
-        .await.unwrap();
-    dbg!(f);
-
-    let f2 = sqlx::query_as!(
-        User,
-        r#"SELECT id, avatar_url, login, email, firstname, lastname, description, hourly_rate,
-        currency, created_at, state as "state: _", role as "role: _" FROM users WHERE login = $1 AND hourly_rate = $2"#,
-        "rest",
-        10.0_f64
-    )
-        .fetch_optional(&mut executor)
-        .await.unwrap();
-    dbg!(f2);
-
-    let f3 = sqlx::query_as!(
-        User,
-        r#"SELECT id, avatar_url, login, email, firstname, lastname, description, hourly_rate,
-        currency, created_at, state as "state: _", role as "role: _" FROM users WHERE login = $1 AND hourly_rate = $2"#,
-        "rest",
-        10_f64
-    )
-        .fetch_optional(&mut executor)
-        .await.unwrap();
-    dbg!(f3);
-
-    let f4 = sqlx::query_as!(
-        User,
-        r#"SELECT id, avatar_url, login, email, firstname, lastname, description, hourly_rate, currency, created_at,
-        state as "state: _", role as "role: _" FROM users WHERE login = $1 AND email = $2"#,
-        "rest",
-        "123"
-    )
-        .fetch_optional(&mut executor)
-        .await.unwrap();
-    dbg!(f4);
+    let s2 = pg_query!(User, &mut executor, login = "login", hourly_rate = Some(10.0));
+    let s3 = pg_query!(User, &mut executor, login = login_var, hourly_rate = unsafe {*(10.0_f32 as const* f32)});
+    let s4 = pg_query_broken!(User, &mut executor, login > login_var, hourly_rate = Some(10));
+    let s5 = pg_query_broken!(User, &mut executor, login = 123, hourly_rate = Some(10.0));
+    let s6 = pg_query_broken!(User, &mut executor, login => "login", hourly_rate = Some(10.0));
 }

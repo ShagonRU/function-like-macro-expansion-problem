@@ -2,7 +2,6 @@
 extern crate proc_macro;
 extern crate quote;
 
-mod ver2;
 
 use proc_macro::{TokenStream};
 use proc_macro2 as pm2;
@@ -12,7 +11,6 @@ use syn::punctuated::Punctuated;
 use syn::{parse_macro_input, Expr, Ident, Token};
 use quote::ToTokens;
 
-// pg_query!(User, &mut executor, login=user_login, email=email)
 
 struct SimplePgQuery {
     model: Ident,
@@ -36,15 +34,14 @@ impl Parse for SimplePgQuery {
         let mut counter = 1;
         for m in Punctuated::<Expr, Token![,]>::parse_terminated(input)?.iter() {
 
-            let tmp_s = m.to_token_stream().to_string();
-            let mut strings = vec![];
-            for s in tmp_s.split('=') {
-                strings.push(s);
+            if let Expr::Binary(e) = m {
+                params.push((Box::into_inner(e.left.clone()), Box::into_inner(e.right.clone()), counter));
+            } else {
+                // eprintln!("{:?}", &m);
+                return Err(syn::Error::new_spanned(
+                    m, format!("Only binary expressions like `col = value` allowed here! {:?}", &m).as_str()
+                ))
             }
-            let column_name = Expr::Verbatim(strings.get(0).unwrap().parse()?);
-            let value = Expr::Verbatim(strings.get(1).unwrap().parse()?);
-
-            params.push((column_name, value, counter));
             counter += 1;
         }
         Ok(SimplePgQuery { model, executor, params, })
@@ -58,8 +55,7 @@ macro_rules! format_literal {
     }}
 }
 
-#[proc_macro]
-pub fn pg_query(input: TokenStream) -> TokenStream {
+pub fn pg_query_broken(input: TokenStream) -> TokenStream {
     let SimplePgQuery { model, executor, params} = parse_macro_input!(input);
 
     let mut add_c = pm2::TokenStream::new();
@@ -98,9 +94,4 @@ pub fn pg_query(input: TokenStream) -> TokenStream {
     eprintln!("{}", &expanded);
 
     TokenStream::from(expanded)
-}
-
-#[proc_macro]
-pub fn pg_query_broken(input: TokenStream) -> TokenStream {
-    ver2::pg_query_broken(input)
 }
